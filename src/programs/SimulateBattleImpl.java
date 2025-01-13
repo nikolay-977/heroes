@@ -20,7 +20,7 @@ public class SimulateBattleImpl implements SimulateBattle {
     //  Цикл атаки O(n)
     //  Сложность метода attack: O(n) + O(n) = O(n)
     //  Наиболее затратной операцией здесь является цикл while в методе simulate.
-    //  Асимптотическая сложность алгоритма составляет: O(n^2)
+    //  Итоговая сложность алгоритма составляет: O(n^2)
     @Override
     public void simulate(Army playerArmy, Army computerArmy) throws InterruptedException {
         // Получаем списки юнитов армий
