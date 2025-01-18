@@ -4,9 +4,7 @@ import com.battle.heroes.army.Army;
 import com.battle.heroes.army.Unit;
 import com.battle.heroes.army.programs.GeneratePreset;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 
 public class GeneratePresetImpl implements GeneratePreset {
 
@@ -28,13 +26,10 @@ public class GeneratePresetImpl implements GeneratePreset {
         List<Unit> unitSortedList = sortByAttackAndHealthAnd(unitList);
         //  Этап 2: Формирование армии
         List<Unit> armyList = getArmy(unitSortedList, maxPoints);
-
         return new Army(armyList);
     }
 
-
     private List<Unit> sortByAttackAndHealthAnd(List<Unit> unitList) {
-
         return unitList.stream()
                 .sorted(Comparator
                         // Сравниваем по эффективности атаки (по убыванию)
@@ -54,25 +49,88 @@ public class GeneratePresetImpl implements GeneratePreset {
         int maxUnitsPerType = 11; // Максимальное количество юнитов каждого типа
         int totalPoints = 0;
 
+        // Счётчики для каждого типа юнитов
+        Map<String, Integer> unitCounters = new HashMap<>();
+
+        unitCounters.put("Knight", 0);
+        unitCounters.put("Swordsman", 0);
+        unitCounters.put("Pikeman", 0);
+        unitCounters.put("Archer", 0);
+
         for (Unit unit : unitList) {
             int unitCost = unit.getCost();
+            String unitType = unit.getUnitType();
 
-            // Подсчитываем, сколько юнитов можно добавить данного типа
+            // Максимально возможное количество юнитов данного типа
             int maxPossibleUnits = Math.min(maxUnitsPerType, maxPoints / unitCost);
 
             for (int i = 0; i < maxPossibleUnits; i++) {
                 if (totalPoints + unitCost > maxPoints) {
-                    // Если превышается стоимость, прекращаем добавление
+                    // Прекращаем добавление, если превышает максимальный бюджет
                     break;
                 }
 
-                int unitNum = i + 1;
-                unit.setName(unit.getUnitType() + " " + unitNum);
-                armyList.add(unit);
+                // Увеличиваем счётчик данного типа юнитов
+                unitCounters.put(unitType, unitCounters.get(unitType) + 1);
+                int unitNumber = unitCounters.get(unitType);
+
+                // Вычисляем координаты и имя для нового юнита
+                int xCoordinate = getXCoordinate(unitType);
+                int yCoordinate = getYCoordinate(unitType, unitNumber - 1);
+                String unitName = generateUnitName(unitType, unitNumber);
+
+                // Создаём нового юнита
+                Unit newUnit = new Unit(
+                        unitName,
+                        unitType,
+                        unit.getHealth(),
+                        unit.getBaseAttack(),
+                        unit.getCost(),
+                        unit.getAttackType(),
+                        unit.getAttackBonuses(),
+                        unit.getDefenceBonuses(),
+                        xCoordinate,
+                        yCoordinate
+                );
+
+                // Добавляем юнита в армию
+                armyList.add(newUnit);
                 totalPoints += unitCost;
             }
         }
 
         return armyList;
+    }
+
+    private String generateUnitName(String unitType, int unitNumber) {
+        switch (unitType) {
+            case "Knight":
+                return "K " + unitNumber;
+            case "Swordsman":
+                return "S " + unitNumber;
+            case "Pikeman":
+                return "P " + unitNumber;
+            case "Archer":
+                return "A " + unitNumber;
+            default:
+                throw new IllegalArgumentException("Unknown unit type: " + unitType);
+        }
+    }
+
+    private int getXCoordinate(String unitType) {
+        return switch (unitType) {
+            case "Knight", "Swordsman" -> 2;
+            case "Pikeman" -> 1;
+            case "Archer" -> 0;
+            default -> throw new IllegalArgumentException("Unknown unit type: " + unitType);
+        };
+    }
+
+    private int getYCoordinate(String unitType, int unitNumber) {
+        return switch (unitType) {
+            case "Knight", "Pikeman", "Archer" -> unitNumber * 2;
+            case "Swordsman" -> unitNumber * 2 + 1;
+            default -> throw new IllegalArgumentException("Unknown unit type: " + unitType);
+        };
     }
 }
